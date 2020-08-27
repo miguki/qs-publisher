@@ -1,1 +1,4 @@
+.gitignore
 /node_modules
+config_dw.js
+newAppConfig_dw.js

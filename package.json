@@ -2,7 +2,7 @@
   "name": "publisher",
   "version": "1.0.0",
   "description": "Qlik Sense App publisher",
-  "main": "index.js",
+  "main": "publisher.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

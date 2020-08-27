@@ -1,17 +1,9 @@
 var qrsInteract = require('qrs-interact');
 var http = require('http');
-
-var config = {
-    hostname: 'sense.datawizards.pl',
-    portNumber: 4242,
-    virtualProxyPrefix: "",
-    localCertPath: 'C:/Users/jans/Desktop/Certs',
-    repoAccount: 'UserDirectory=WIN-50635PQO9HR;UserId=jan',
-};
-
-var statusCodes = http.STATUS_CODES
-
+var config = require(process.argv[2])
 var qrsInteracter = new qrsInteract(config);
+var statusCodes = http.STATUS_CODES
+var newAppConfig = require(process.argv[3])
 
 var consoleWrite = function (text) {
     process.stdout.write(text + '.'.repeat(90 - text.length))
@@ -54,7 +46,7 @@ var listSheets = function (appId) {
 
 var replaceApp = function (appId, replacedAppId) {
     return new Promise(function (resolve, reject) {
-        consoleWrite('Replacing ' + appId + ' with ' + replacedAppId)
+        consoleWrite('Replacing ' + replacedAppId + ' with ' + appId)
         qrsInteracter.Put(
             'app/' + appId + '/replace?app=' + replacedAppId,
             ''
@@ -64,6 +56,21 @@ var replaceApp = function (appId, replacedAppId) {
 
         }).catch(function (error) {
             console.log(error);
+            reject(error)
+        });
+    })
+}
+
+var deleteApp = function (appId) {
+    return new Promise(function (resolve, reject) {
+        consoleWrite('Deleting app ' + appId)
+        qrsInteracter.Delete(
+            'app/' + appId
+        ).then(function (statusCode) {
+            console.log(statusCode.toString() + ' ' + statusCodes[statusCode.toString()])
+            resolve()
+        }).catch(function (error) {
+            // console.log(error);
             reject(error)
         });
     })
@@ -88,29 +95,6 @@ var listSheetsToRemove = function (sheetList, sheetNamesToLeave) {
     return sheetList.filter(ar => !sheetNamesToLeave.find(rm => (rm === ar.name)))
 }
 
-var newAppConfig = {
-    newApps: [
-        {
-            sourceAppId: '388a1695-e268-414a-a1cb-53bd7a72c4e8',
-            name: 'App 01',
-            replacedAppId: '9b61a1c3-9118-4dbb-9285-5f8453ffc222',
-            sheetNames: [
-                'Sheet 01',
-                'Sheet 02'
-            ]
-        },
-        {
-            sourceAppId: '388a1695-e268-414a-a1cb-53bd7a72c4e8',
-            name: 'App 02',
-            replacedAppId: 'd08b85ff-c2e9-4722-8818-1aa59cba9480',
-            sheetNames: [
-                'Sheet 03',
-                'Sheet 04'
-            ]
-        }
-    ]
-}
-
 async function deleteSheets(sheetList, sheetNamesToLeave) {
     var sheetsToRemove = listSheetsToRemove(sheetList, sheetNamesToLeave)
     for (sheet of sheetsToRemove) {
@@ -119,19 +103,24 @@ async function deleteSheets(sheetList, sheetNamesToLeave) {
 }
 
 async function publish(appConfig) {
-    for(newApp of appConfig.newApps){
+    for (newApp of appConfig.newApps) {
         await createApp(newApp)
     }
     console.log('\nDone')
 }
 
-var createApp = function(newAppConfig){
-    return new Promise(function(resolve, reject){
+var createApp = function (newAppConfig) {
+    return new Promise(function (resolve, reject) {
         copyApp(newAppConfig.sourceAppId, newAppConfig.name).then(function (result) {
             var newAppId = result
             listSheets(newAppId).then(sheetList => deleteSheets(sheetList, newAppConfig.sheetNames).then(function () {
-                replaceApp(newAppId, newAppConfig.replacedAppId).then(function(){
-                    resolve()
+                replaceApp(newAppId, newAppConfig.replacedAppId).then(function () {
+                    deleteApp(newAppId).then(function () {
+                        resolve()
+                    }).catch(function (error) {
+                        console.log(error)
+                        reject(error)
+                    })
                 }).catch(function (error) {
                     console.log(error)
                     reject(error)
@@ -146,3 +135,17 @@ var createApp = function(newAppConfig){
 }
 
 publish(newAppConfig)
+
+// var about = function () {
+//     return new Promise(function (resolve, reject) {
+//         consoleWrite('About ')
+//         qrsInteracter.Get('about').then(function (result) {
+//             console.log(result.statusCode.toString() + ' ' + statusCodes[result.statusCode.toString()])
+//             // console.log(result.body);
+//             resolve(result.body)
+//         }).catch(function (error) {
+//             // console.log(error);
+//             reject(error)
+//         });
+//     })
+// }
