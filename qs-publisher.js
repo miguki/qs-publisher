@@ -1,9 +1,9 @@
 var qrsInteract = require('qrs-interact');
-var http = require('http');
 var config = require(process.argv[2])
 var qrsInteracter = new qrsInteract(config);
-var statusCodes = http.STATUS_CODES
 var newAppConfig = require(process.argv[3])
+var http = require('http');
+var statusCodes = http.STATUS_CODES
 
 var consoleWrite = function (text) {
     process.stdout.write(text + '.'.repeat(90 - text.length))
@@ -19,12 +19,11 @@ var copyApp = function (appId, appName) {
             'json'
         ).then(function (result) {
             console.log(result.statusCode.toString() + ' ' + statusCodes[result.statusCode.toString()])
-            // console.log(result.body);
             console.log('New app id: ' + result.body.id)
             resolve(result.body.id)
 
         }).catch(function (error) {
-            // console.log(error);
+            console.log(error);
             reject(error)
         });
     })
@@ -35,10 +34,9 @@ var listSheets = function (appId) {
         consoleWrite('Listing sheets in app ' + appId)
         qrsInteracter.Get('app/object/full?filter=app.id eq ' + appId + ' and objectType eq \'sheet\'').then(function (result) {
             console.log(result.statusCode.toString() + ' ' + statusCodes[result.statusCode.toString()])
-            // console.log(result.body);
             resolve(result.body)
         }).catch(function (error) {
-            // console.log(error);
+            console.log(error);
             reject(error)
         });
     })
@@ -66,11 +64,11 @@ var deleteApp = function (appId) {
         consoleWrite('Deleting app ' + appId)
         qrsInteracter.Delete(
             'app/' + appId
-        ).then(function (statusCode) {
-            console.log(statusCode.toString() + ' ' + statusCodes[statusCode.toString()])
+        ).then(function (reply) {
+            console.log(reply.statusCode.toString() + ' ' + statusCodes[reply.statusCode.toString()])
             resolve()
         }).catch(function (error) {
-            // console.log(error);
+            console.log(error);
             reject(error)
         });
     })
@@ -81,11 +79,11 @@ var deleteSheet = function (objectId) {
         consoleWrite('Deleting sheet ' + objectId)
         qrsInteracter.Delete(
             'app/object/' + objectId
-        ).then(function (statusCode) {
-            console.log(statusCode.toString() + ' ' + statusCodes[statusCode.toString()])
+        ).then(function (reply) {
+            console.log(reply.statusCode.toString() + ' ' + statusCodes[reply.statusCode.toString()])
             resolve()
         }).catch(function (error) {
-            // console.log(error);
+            console.log(error);
             reject(error)
         });
     })
@@ -100,13 +98,6 @@ async function deleteSheets(sheetList, sheetNamesToLeave) {
     for (sheet of sheetsToRemove) {
         await deleteSheet(sheet.id)
     };
-}
-
-async function publish(appConfig) {
-    for (newApp of appConfig.newApps) {
-        await createApp(newApp)
-    }
-    console.log('\nDone')
 }
 
 var createApp = function (newAppConfig) {
@@ -125,7 +116,10 @@ var createApp = function (newAppConfig) {
                     console.log(error)
                     reject(error)
                 })
-            })).catch(function (error) {
+            }).catch(function (error) {
+                console.log(error)
+            })
+            ).catch(function (error) {
                 console.log(error)
             })
         }).catch(function (error) {
@@ -134,18 +128,11 @@ var createApp = function (newAppConfig) {
     })
 }
 
-publish(newAppConfig)
+async function publish(appConfig) {
+    for (newApp of appConfig.newApps) {
+        await createApp(newApp)
+    }
+    console.log('\nDone')
+}
 
-// var about = function () {
-//     return new Promise(function (resolve, reject) {
-//         consoleWrite('About ')
-//         qrsInteracter.Get('about').then(function (result) {
-//             console.log(result.statusCode.toString() + ' ' + statusCodes[result.statusCode.toString()])
-//             // console.log(result.body);
-//             resolve(result.body)
-//         }).catch(function (error) {
-//             // console.log(error);
-//             reject(error)
-//         });
-//     })
-// }
+publish(newAppConfig)
