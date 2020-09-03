@@ -35,7 +35,7 @@ This script helps to do that automatically.
     * Example using default files: node qs-publisher.js ./config ./newAppConfig
     * Use forward slashes "/" in path to files 
 
-![Screenshot](screenshot01.PNG)
+![Screenshot](qs-publisher.gif)
 
 ## Additional information
 
