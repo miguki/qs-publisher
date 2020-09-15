@@ -3,7 +3,7 @@ var config = {
     portNumber: 4242,
     virtualProxyPrefix: "",
     localCertPath: 'C:/Certs',
-    repoAccount: 'UserDirectory=test;UserId=example',
+    repoAccount: 'UserDirectory=test;UserId=example'
 }
 
 module.exports = config
